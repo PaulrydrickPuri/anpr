@@ -17,6 +17,7 @@ This project evaluates the accuracy of a deployed Automatic Number Plate Recogni
 | 2026-04-13 | [anpr-accuracy-analysis-pipeline](sessions/2026-04-13_anpr-accuracy-analysis-pipeline.md) | Built full pipeline; 63 images downloaded; EasyOCR + Gemini Vision + YOLOv5 run; Excel + HTML reports generated; YOLO outperforms deployed system on FALSE rows |
 | 2026-04-13 | [human-gt-gemini25-pdf-reports](sessions/2026-04-13_human-gt-gemini25-pdf-reports.md) | Integrated human ground truth CSV; upgraded to Gemini 2.5 Pro; generated YOLO bbox PDF + Gemini Vision PDF; final accuracy: Gemini 80%, YOLO 35%, System 2.5% vs human GT |
 | 2026-04-13 | [yolov8-onnx-model-comparison](sessions/2026-04-13_yolov8-onnx-model-comparison.md) | Added YOLOv8s ONNX to pipeline; fixed 3 ONNX inference bugs; 5-way comparison: Gemini 67.5% / YOLOv5 35% / YOLOv8 27.5% / System 2.5% / EasyOCR 7.5% vs human GT |
+| 2026-04-13 | [production-pipeline-failure-analysis](sessions/2026-04-13_production-pipeline-failure-analysis.md) | Replicated production pipeline; confirmed YOLOv8s = deployed model; root cause: 65% of failures from postprocessing (get_sequence 30% + correct_regex 35%), not model weights |
 
 ---
 
@@ -128,16 +129,30 @@ Brand logo classes (36–45): BAMbee, Chancellor, Malaysia, Perodua, Persona, Pr
 
 ---
 
+## Root Cause Summary (2026-04-13)
+
+The deployed system's 2.5% accuracy on failed plates is **not a model problem** — it is a postprocessing problem:
+
+| Failure Mode | Plates Affected | Layer |
+|---|---|---|
+| `correct_regex` bad alpha↔numeric substitutions | 14/40 (35%) | Postprocessing |
+| `get_sequence` reorders correct detections | 12/40 (30%) | Postprocessing |
+| Char confusion at detection level | 6/40 (15%) | Model |
+| Missing characters (conf=0.5 too high) | 3/40 (8%) | Threshold |
+
+**Fix:** Replace `get_sequence` with simple left-to-right x-sort for plate-crop inputs; apply `correct_regex` only when detected string does not already match a valid MY plate pattern.
+
+---
+
 ## Next Steps
-- [ ] Investigate production preprocessing pipeline vs raw crop differences (root cause of 2.5% system accuracy)
-- [ ] Fix `I` (class 18) suppression in both YOLOv5m and YOLOv8s — causes UITM→UTM misreads
-- [ ] Lower NMS IOU to 0.35–0.40 to fix double-detections on wide plates
-- [ ] Re-run YOLOv8 at 640×640 input (vs current 416) to test accuracy improvement on small chars
-- [ ] Ensemble YOLOv5 + YOLOv8 predictions — models fail on different plates, union/voting may push above 40%
+- [ ] Fix `get_sequence` for plate-crop mode — use x-sort, not slope-sort
+- [ ] Fix `correct_regex` — skip when raw string already matches valid MY plate pattern
+- [ ] Lower deployed confidence threshold from 0.5 → 0.35 to recover missed characters
+- [ ] Run corrected postprocessing on 63 plates to quantify expected improvement before redeployment
+- [ ] Fix `I` (class 18) suppression in both models — causes UITM→UTM misreads
+- [ ] Verify whether deployed system runs on raw plate crops or full-frame crops
+- [ ] Package pipeline as CLI (`argparse`) for client reuse
 - [ ] Retrain both models with Putrajaya / UITM / UTEM / non-standard plate examples
-- [ ] Add per-remark-category accuracy breakdown to PDF (MISDETECTION vs GLITCHY CAMERA vs WRONG LANE)
-- [ ] Package as CLI with `argparse` for client reuse
-- [ ] Add per-class AP bar chart to Excel Summary sheet
 
 ---
 
