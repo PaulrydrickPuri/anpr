@@ -15,6 +15,7 @@ This project evaluates the accuracy of a deployed Automatic Number Plate Recogni
 | Date | Session | What Was Done |
 |---|---|---|
 | 2026-04-13 | [anpr-accuracy-analysis-pipeline](sessions/2026-04-13_anpr-accuracy-analysis-pipeline.md) | Built full pipeline; 63 images downloaded; EasyOCR + Gemini Vision + YOLOv5 run; Excel + HTML reports generated; YOLO outperforms deployed system on FALSE rows |
+| 2026-04-13 | [human-gt-gemini25-pdf-reports](sessions/2026-04-13_human-gt-gemini25-pdf-reports.md) | Integrated human ground truth CSV; upgraded to Gemini 2.5 Pro; generated YOLO bbox PDF + Gemini Vision PDF; final accuracy: Gemini 80%, YOLO 35%, System 2.5% vs human GT |
 
 ---
 
@@ -67,17 +68,17 @@ Brand logo classes (36–45): BAMbee, Chancellor, Malaysia, Perodua, Persona, Pr
 
 ---
 
-## Key Results (2026-04-13)
+## Key Results (2026-04-13, vs Human Ground Truth — 40 readable rows)
 
-| Comparison | Exact Match | Avg Char Accuracy |
+| Source | Exact Match | Avg Char Accuracy |
 |---|---|---|
-| System vs Gemini (GT) | 1.6% (1/63) | 38.1% |
-| **YOLO vs Gemini (GT)** | **20.6% (13/63)** | **47.3%** |
-| YOLO vs System | 4.8% (3/63) | — |
-| EasyOCR vs Gemini (GT) | 7.9% (5/63) | — |
-| YOLO avg confidence | — | 0.799/char |
+| System (deployed pipeline) | 2.5% (1/40) | 51.2% |
+| **YOLO best.pt** | **35.0% (14/40)** | **64.3%** |
+| **Gemini 2.5 Pro** | **80.0% (32/40)** | **92.8%** |
+| EasyOCR | 7.5% (3/40) | 35.3% |
+| YOLO avg confidence | — | 0.751/char |
 
-**Key insight:** YOLO significantly outperforms the deployed system on these FALSE rows, suggesting the production preprocessing pipeline is degrading model accuracy rather than the model weights themselves.
+**Key insight:** Gemini 2.5 Pro (80%) is a reliable VLM ground truth. YOLO (35%) is 14× better than the deployed system (2.5%) on failed plates, confirming the production **preprocessing pipeline** — not the model weights — is the root cause of failures. 23/63 plates were marked "not clear" even by human reviewers, representing hardware/placement failures.
 
 ---
 
@@ -87,10 +88,12 @@ Brand logo classes (36–45): BAMbee, Chancellor, Malaysia, Perodua, Persona, Pr
 |---|---|
 | `sessions/` | Per-session progress logs |
 | `PROGRESS.md` | Session index |
-| `anpr_analysis.py` *(local)* | Main pipeline script |
-| `report/analysis_output/*.xlsx` *(local)* | Excel comparison workbooks |
-| `report/analysis_output/*.html` *(local)* | HTML comparison reports |
-| `report/analysis_output/images/` *(local)* | 63 downloaded plate crop JPEGs |
+| `anpr_analysis.py` *(local)* | v1 pipeline (EasyOCR + Gemini 2.0 Flash + YOLO, HTML/Excel output) |
+| `anpr_analysis_v2.py` *(local)* | v2 pipeline (human GT + Gemini 2.5 Pro + YOLO + PDF generation) |
+| `report/analysis_v2/*.pdf` *(local)* | YOLO bbox annotation PDF + Gemini Vision PDF |
+| `report/analysis_v2/*.csv` *(local)* | Full comparison CSV |
+| `report/analysis_v2/*.xlsx` *(local)* | 4-sheet Excel workbook |
+| `report/analysis_v2/annotated_yolo/` *(local)* | 126 annotation card images (63 YOLO + 63 Gemini) |
 
 ---
 
@@ -106,12 +109,13 @@ Brand logo classes (36–45): BAMbee, Chancellor, Malaysia, Perodua, Persona, Pr
 ---
 
 ## Next Steps
-- [ ] Investigate production preprocessing pipeline vs raw crop differences
-- [ ] Analyse `I` vs `1` confusion in YOLO training data (UITM plates)
-- [ ] Per-remark-category accuracy breakdown (MISDETECTION vs GLITCHY CAMERA vs WRONG LANE)
-- [ ] Add YOLO bounding-box visualisation overlays on plate images
-- [ ] Wrap pipeline into CLI with argparse for client reuse
-- [ ] Re-run with funded Anthropic API key for Claude Vision cross-validation
+- [ ] Investigate production preprocessing pipeline vs raw crop differences (root cause of 2.5% system accuracy)
+- [ ] Fix YOLO `I` suppression — class 18 underrepresented, causes UTM/UITM confusion
+- [ ] Lower NMS IOU to 0.35–0.40 to fix double-detections on wide plates
+- [ ] Retrain YOLO with Putrajaya / UITM / UTEM / non-standard plate examples
+- [ ] Add per-remark-category accuracy breakdown to PDF
+- [ ] Package as CLI with `argparse` for client reuse
+- [ ] Fund Anthropic API for Claude Vision cross-validation alongside Gemini
 
 ---
 
