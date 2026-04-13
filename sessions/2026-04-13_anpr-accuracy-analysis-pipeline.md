@@ -1,13 +1,13 @@
 # Session Log — 2026-04-13
-**Project:** ANPR Accuracy Analysis — Genting JPO  
-**Working directory:** `/Users/paulrydrickpuri/Desktop/ANPR_Report_JPO`  
+**Project:** ANPR Accuracy Analysis — Client A  
+**Working directory:** `/Users/paulrydrickpuri/Desktop/ANPR_Project`  
 **Duration context:** ~2 hours (approx. 10:19 – 11:17 MYT)
 
 ---
 
 ## Summary
 
-The goal of this session was to build a comprehensive automated analysis pipeline that evaluates the accuracy of a deployed ANPR (Automatic Number Plate Recognition) system at Genting JPO. The pipeline filters 63 "FALSE" accuracy rows from the client's Excel report, downloads the corresponding plate crop images, runs three independent plate-reading methods (EasyOCR, Gemini 2.0 Flash Vision, and a custom YOLOv5 character-detection model), and produces a side-by-side comparison report in both Excel (4-sheet workbook) and styled HTML. By end of session, the full pipeline ran successfully end-to-end with Gemini Vision as the gold-standard ground truth, revealing that the retrained YOLO model outperforms the original ANPR pipeline on failed cases, pointing to preprocessing as the likely root cause of errors.
+The goal of this session was to build a comprehensive automated analysis pipeline that evaluates the accuracy of a deployed ANPR (Automatic Number Plate Recognition) system at Client A. The pipeline filters 63 "FALSE" accuracy rows from the client's Excel report, downloads the corresponding plate crop images, runs three independent plate-reading methods (EasyOCR, Gemini 2.0 Flash Vision, and a custom YOLOv5 character-detection model), and produces a side-by-side comparison report in both Excel (4-sheet workbook) and styled HTML. By end of session, the full pipeline ran successfully end-to-end with Gemini Vision as the gold-standard ground truth, revealing that the retrained YOLO model outperforms the original ANPR pipeline on failed cases, pointing to preprocessing as the likely root cause of errors.
 
 ---
 
@@ -15,9 +15,9 @@ The goal of this session was to build a comprehensive automated analysis pipelin
 
 ### `anpr_analysis.py` — Main Analysis Pipeline
 - Single-file Python pipeline (~620 lines) covering all phases: data loading, image download, OCR, Gemini Vision, YOLOv5 inference, comparison, and report generation.
-- **Location:** `/Users/paulrydrickpuri/Desktop/ANPR_Report_JPO/anpr_analysis.py`
+- **Location:** `/Users/paulrydrickpuri/Desktop/ANPR_Project/anpr_analysis.py`
 - **Phases:**
-  1. Load `ACCURACY REPORT FOR ANPR JPO.xlsx`, filter rows where `ACCURACY ? == 0.0` → 63 FALSE rows
+  1. Load `ACCURACY REPORT.xlsx`, filter rows where `ACCURACY ? == 0.0` → 63 FALSE rows
   2. Download plate crop images from HTTPS URLs (self-signed cert server, `verify=False` required) into `report/analysis_output/images/`
   3. Run EasyOCR (English, CPU) on each image with alphanumeric allowlist
   4. Call Gemini 2.0 Flash via `google-genai` SDK for ground-truth plate reading
@@ -26,7 +26,7 @@ The goal of this session was to build a comprehensive automated analysis pipelin
   7. Write Excel workbook (Summary, Comparison, YOLO_CharDetail, Raw_Results sheets) and a styled HTML report with metric cards, row table, and per-char confidence statistics
 
 ### Output Reports
-- **Location:** `/Users/paulrydrickpuri/Desktop/ANPR_Report_JPO/report/analysis_output/`
+- **Location:** `/Users/paulrydrickpuri/Desktop/ANPR_Project/report/analysis_output/`
 - `anpr_analysis_20260413_110244.xlsx` — 54 KB, 4-sheet workbook
 - `anpr_analysis_20260413_110244.html` — 51 KB, styled browser report
 - `images/` — 63 downloaded plate crop JPEGs (all 63 downloaded successfully)
@@ -39,7 +39,7 @@ The goal of this session was to build a comprehensive automated analysis pipelin
 |---|---|---|
 | Ground truth source | Gemini 2.0 Flash (via `google-genai` SDK) | Anthropic API key had no credits; Gemini free tier is generous (15 RPM, no card), and `gemini-2.0-flash` has strong OCR capability |
 | YOLOv5 loader | `torch.hub.load('ultralytics/yolov5', 'custom', ...)` | `best.pt` is a YOLOv5 model; the `ultralytics` pip package only supports YOLOv8+ and raises `TypeError` on YOLOv5 weights |
-| SSL verification | `requests.get(..., verify=False)` + `urllib3.disable_warnings()` | Image server at `tapway-genting-jpo-viewer.edgev2.gotapway.com` uses a self-signed/unverifiable certificate |
+| SSL verification | `requests.get(..., verify=False)` + `urllib3.disable_warnings()` | Image server at `<redacted-client-image-server>` uses a self-signed/unverifiable certificate |
 | Character assembly | Sort YOLO detections by x-centre, concatenate `name` field | Plates read left-to-right; raw YOLO output is unordered by default |
 | Char class filter | Only class IDs 0–35 (digits 0-9, letters A-Z) | Classes 36–45 are vehicle brand logos (BAMbee, Chancellor, Perodua, etc.) and should not appear in the plate string |
 | Fallback ground truth | EasyOCR if Gemini key not available | Allows pipeline to run and produce partial results even without an API key |
@@ -93,7 +93,7 @@ model.iou  = 0.45   # NMS IOU threshold — removes duplicate bounding boxes
 
 | File | Location | Purpose |
 |---|---|---|
-| `anpr_analysis.py` | `/Users/paulrydrickpuri/Desktop/ANPR_Report_JPO/` | Main pipeline script — filter, download, OCR, Gemini, YOLO, report |
+| `anpr_analysis.py` | `/Users/paulrydrickpuri/Desktop/ANPR_Project/` | Main pipeline script — filter, download, OCR, Gemini, YOLO, report |
 | `anpr_analysis_20260413_110244.xlsx` | `report/analysis_output/` | 4-sheet Excel comparison workbook (final run with Gemini GT) |
 | `anpr_analysis_20260413_110244.html` | `report/analysis_output/` | Styled HTML report with metric cards and per-char YOLO stats |
 | `anpr_analysis_20260413_101934.xlsx` | `report/analysis_output/` | Earlier run with EasyOCR as GT (pre-Gemini) |
@@ -117,7 +117,7 @@ model.iou  = 0.45   # NMS IOU threshold — removes duplicate bounding boxes
 ## Session Metadata
 - **Date:** 2026-04-13
 - **Model:** Claude Sonnet 4.6 (claude-sonnet-4-6)
-- **Working directory:** `/Users/paulrydrickpuri/Desktop/ANPR_Report_JPO`
+- **Working directory:** `/Users/paulrydrickpuri/Desktop/ANPR_Project`
 - **Key packages used:** `pandas`, `openpyxl`, `requests`, `opencv-python`, `easyocr`, `torch`, `ultralytics/yolov5` (torch hub), `google-genai`, `anthropic` (tested, not used due to billing)
 - **Python version:** 3.12.9
 - **torch version:** 2.11.0

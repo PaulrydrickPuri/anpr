@@ -1,4 +1,4 @@
-# ANPR Accuracy Analysis — Genting JPO
+# ANPR Accuracy Analysis — Client A
 
 > Automated pipeline to audit and benchmark an ANPR system's plate-reading accuracy using three independent methods: EasyOCR, Gemini Vision (ground truth), and a custom YOLOv5 character-detection model.
 
@@ -6,7 +6,7 @@
 
 ## Project Overview
 
-This project evaluates the accuracy of a deployed Automatic Number Plate Recognition (ANPR) system at Genting JPO. The client provided an Excel report (`ACCURACY REPORT FOR ANPR JPO.xlsx`) with 1,022 plate reading events flagged as TRUE/FALSE. This pipeline focuses on the 63 FALSE rows — downloading their plate crop images from the live server, running three independent reading methods, and producing a side-by-side comparison report to identify whether failures are caused by the model itself, the preprocessing pipeline, or image quality.
+This project evaluates the accuracy of a deployed Automatic Number Plate Recognition (ANPR) system at Client A. The client provided an Excel report (`ACCURACY REPORT.xlsx`) with 1,022 plate reading events flagged as TRUE/FALSE. This pipeline focuses on the 63 FALSE rows — downloading their plate crop images from the live server, running three independent reading methods, and producing a side-by-side comparison report to identify whether failures are caused by the model itself, the preprocessing pipeline, or image quality.
 
 ---
 
@@ -23,10 +23,10 @@ This project evaluates the accuracy of a deployed Automatic Number Plate Recogni
 
 | Item | Detail |
 |---|---|
-| Source | Client-provided Excel report (`ACCURACY REPORT FOR ANPR JPO.xlsx`) |
+| Source | Client-provided Excel report (`ACCURACY REPORT.xlsx`) |
 | Total rows | 1,022 ANPR events |
 | FALSE rows analysed | 63 |
-| Image source | `https://tapway-genting-jpo-viewer.edgev2.gotapway.com/` (self-signed cert) |
+| Image source | `https://<redacted-client-image-server>/` (self-signed cert) |
 | Image type | Plate crop JPEGs |
 | Failure categories | MISDETECTION (33), GLITCHY CAMERA (9), WRONG LANE DETECTION (8), JPJ NOT STANDARD (4), WRONG LANE (4), others (5) |
 

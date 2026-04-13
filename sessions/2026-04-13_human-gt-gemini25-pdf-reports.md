@@ -1,6 +1,6 @@
 # Session Log — 2026-04-13 (Session 2)
-**Project:** ANPR Accuracy Analysis — Genting JPO  
-**Working directory:** `/Users/paulrydrickpuri/Desktop/ANPR_Report_JPO`  
+**Project:** ANPR Accuracy Analysis — Client A  
+**Working directory:** `/Users/paulrydrickpuri/Desktop/ANPR_Project`  
 **Duration context:** ~1.5 hours (approx. 11:37 – 13:00 MYT, same day as Session 1)
 
 ---
@@ -15,7 +15,7 @@ This session extended the ANPR analysis pipeline (v1 from earlier today) with th
 
 ### `anpr_analysis_v2.py` — Upgraded Pipeline
 - Complete rewrite of the v1 pipeline (~480 lines) with human GT support, Gemini 2.5 Pro, and PDF generation.
-- **Location:** `/Users/paulrydrickpuri/Desktop/ANPR_Report_JPO/anpr_analysis_v2.py`
+- **Location:** `/Users/paulrydrickpuri/Desktop/ANPR_Project/anpr_analysis_v2.py`
 - **Data source changed:** from Excel (`ACCURACY ?` column with 0/1) to CSV with explicit `human_ground_truth` column
 - **Key new capabilities:**
   - Parses `human_ground_truth` field; marks 23/63 rows as "not clear" (human couldn't read the plate)
@@ -119,7 +119,7 @@ model.iou  = 0.45   # NMS IOU — consider lowering to 0.35 to fix double-detect
 
 | File | Location | Purpose |
 |---|---|---|
-| `anpr_analysis_v2.py` | `/Users/paulrydrickpuri/Desktop/ANPR_Report_JPO/` | Full v2 pipeline — human GT, Gemini 2.5 Pro, YOLO, PDF generation |
+| `anpr_analysis_v2.py` | `/Users/paulrydrickpuri/Desktop/ANPR_Project/` | Full v2 pipeline — human GT, Gemini 2.5 Pro, YOLO, PDF generation |
 | `report_20260413_114048.csv` | `report/analysis_v2/` | Flat comparison table, all 63 rows |
 | `report_20260413_114048.xlsx` | `report/analysis_v2/` | 4-sheet Excel workbook |
 | `yolo_model_report_20260413_114048.pdf` | `report/analysis_v2/` | YOLO annotation PDF (63 plates, bbox overlays, confidence tables) |
@@ -145,7 +145,7 @@ model.iou  = 0.45   # NMS IOU — consider lowering to 0.35 to fix double-detect
 ## Session Metadata
 - **Date:** 2026-04-13
 - **Model:** Claude Sonnet 4.6 (claude-sonnet-4-6)
-- **Working directory:** `/Users/paulrydrickpuri/Desktop/ANPR_Report_JPO`
+- **Working directory:** `/Users/paulrydrickpuri/Desktop/ANPR_Project`
 - **Key packages used:** `pandas`, `openpyxl`, `requests`, `opencv-python`, `easyocr`, `torch`, `ultralytics/yolov5` (torch hub), `google-genai 0.x`, `reportlab`, `numpy`
 - **Python version:** 3.12.9
 - **torch version:** 2.11.0
