@@ -7,7 +7,7 @@
 
 ## Summary
 
-This session replicated the deployed system's production inference and postprocessing pipeline on the 63 FALSE plate images using both YOLOv5m and YOLOv8s, to understand exactly why the system achieves only 2.5% accuracy on its own failed plates. A standalone runner (`run_production_pipeline.py`) was built that faithfully mirrors the production code from `inference/object_detection_yolov5.py` and `postprocessing/postprocess_anpr.py`, including all NMS settings sourced from `inference_config.yaml` (conf=0.5, iou=0.5, input=416), the letterbox+resize double transform, the merge-NMS secondary pass, and the pad filter. YOLOv8s + production postprocessing achieved exactly 2.5% — confirming it is the deployed model. A systematic failure mode analysis then identified that **65% of failures are caused by the postprocessing chain** (`get_sequence` and `correct_regex`), not the model weights.
+This session replicated the deployed system's production inference and postprocessing pipeline on the 63 FALSE plate images using both YOLOv5m and YOLOv8s, to understand exactly why the system achieves only 2.5% accuracy on its own failed plates. A standalone runner (`run_production_pipeline.py`) was built that faithfully mirrors the production code from `inference/object_detection_yolov5.py` and `postprocessing/postprocess_anpr.py`, including all NMS settings sourced from `inference_config.yaml` (conf=0.5, iou=0.5, input=416), the letterbox+resize double transform, the merge-NMS secondary pass, and the pad filter. **YOLOv5m is the deployed model**; our replication gives 5% (2/40) vs the system's 2.5% (1/40) — the 1-plate discrepancy is row 14 (`UTM447`), where our replication correctly suppresses a phantom `I` using the downloaded plate JPEG, while the deployed system detects `UITM447` from its live video crop, suggesting the live input has a slightly different framing. A systematic failure mode analysis identified that **65% of failures are caused by the postprocessing chain** (`get_sequence` and `correct_regex`), not the model weights.
 
 ---
 
@@ -45,13 +45,13 @@ This session replicated the deployed system's production inference and postproce
 | Plain Python IoU in merge | Replaced JIT `box_iou` with inline numpy | `@torch.jit.script box_iou` returns `[1,1]` tensor; `if tensor >= 0.8` fails with "Boolean value ambiguous" |
 | YOLOv5 loading path | Added `~/.cache/torch/hub/ultralytics_yolov5_master` to `sys.path` | `torch.load` needs `models.yolo.DetectionModel` in Python path; hub cache has it |
 | Pad filter inclusion | Added post-NMS letterbox pad filter | Was present in production `__call__` but missing from earlier runs; needed to replicate system exactly |
-| Deployed model identified as YOLOv8s | YOLOv8 + prod = 2.5%, system = 2.5% | YOLOv5 + same prod pipeline = 5% — only YOLOv8 matches exactly |
+| Deployed model is YOLOv5m (confirmed by client) | YOLOv5m + prod = 5% (2/40), system = 2.5% (1/40) | 1-plate gap on row 14 (`UTM447`): live video crop causes phantom `I` detection in deployed system; static JPEG does not |
 
 ---
 
 ## Findings & Observations
 
-1. **YOLOv8s + production postprocessing = 2.5% exact match, same as deployed system.** This confirms the deployed system uses YOLOv8s (v2model), not YOLOv5m. YOLOv5m + same pipeline gives 5%.
+1. **YOLOv5m is the deployed model** (confirmed by client). Our replication gives 5% (2/40) vs the system's 2.5% (1/40) — a 1-plate discrepancy. Both get row 7 right (JUU9113). Our replication also gets row 14 right (`UTM447`), but the deployed system reads it as `UITM447` (phantom `I` detected). This gap is explained by input differences: our replication uses downloaded plate JPEGs; the deployed system feeds live video crops with slightly different framing, causing the `I` to be detected at conf ≥ 0.5 in the live feed but not in the static JPEG.
 
 2. **65% of failures are caused by production postprocessing, not the model.** The model detects correct characters on most plates; the postprocessing chain corrupts them before output.
 

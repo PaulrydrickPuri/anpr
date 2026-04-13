@@ -17,7 +17,7 @@ This project evaluates the accuracy of a deployed Automatic Number Plate Recogni
 | 2026-04-13 | [anpr-accuracy-analysis-pipeline](sessions/2026-04-13_anpr-accuracy-analysis-pipeline.md) | Built full pipeline; 63 images downloaded; EasyOCR + Gemini Vision + YOLOv5 run; Excel + HTML reports generated; YOLO outperforms deployed system on FALSE rows |
 | 2026-04-13 | [human-gt-gemini25-pdf-reports](sessions/2026-04-13_human-gt-gemini25-pdf-reports.md) | Integrated human ground truth CSV; upgraded to Gemini 2.5 Pro; generated YOLO bbox PDF + Gemini Vision PDF; final accuracy: Gemini 80%, YOLO 35%, System 2.5% vs human GT |
 | 2026-04-13 | [yolov8-onnx-model-comparison](sessions/2026-04-13_yolov8-onnx-model-comparison.md) | Added YOLOv8s ONNX to pipeline; fixed 3 ONNX inference bugs; 5-way comparison: Gemini 67.5% / YOLOv5 35% / YOLOv8 27.5% / System 2.5% / EasyOCR 7.5% vs human GT |
-| 2026-04-13 | [production-pipeline-failure-analysis](sessions/2026-04-13_production-pipeline-failure-analysis.md) | Replicated production pipeline; confirmed YOLOv8s = deployed model; root cause: 65% of failures from postprocessing (get_sequence 30% + correct_regex 35%), not model weights |
+| 2026-04-13 | [production-pipeline-failure-analysis](sessions/2026-04-13_production-pipeline-failure-analysis.md) | Replicated production pipeline (YOLOv5m = deployed model, confirmed); root cause: 65% of failures from postprocessing (get_sequence 30% + correct_regex 35%), not model weights |
 
 ---
 
@@ -37,7 +37,7 @@ This project evaluates the accuracy of a deployed Automatic Number Plate Recogni
 
 ## Models
 
-### YOLOv5m — Primary Detection Model
+### YOLOv5m — Primary Detection Model *(Deployed)*
 
 | Item | Detail |
 |---|---|
